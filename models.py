@@ -177,6 +177,19 @@ class User(db.Model):
     uuid = db.Column(db.String(120),unique=True ,nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
     role = db.relationship('Role', backref='users', lazy=True)
+    create_timestamp = db.Column(db.DateTime, nullable=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    delete_timestamp = db.Column(db.DateTime, nullable=True)
+    last_login = db.Column(db.DateTime, nullable=True)
+class Client(db.Model):
+    __tablename__ = "Client"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)
+    name = db.Column(db.String(120), nullable = False)
+    phone = db.Column(db.String(120), nullable = False)
+    email = db.Column(db.String(120), nullable = True)
+    address = db.Column(db.String(120), nullable = True)
+    create_timestamp = db.Column(db.DateTime, nullable = False)
+
 class RepairTrackingStep(db.Model):
     __tablename = "DeviceTrackingStep"
     id = db.Column(db.Integer, primary_key = True, nullable =  False)
@@ -188,6 +201,84 @@ class Device(db.Model):
     device_brand = db.Column(db.String(120), nullable = False)
     device_model = db.Column(db.String(120),nullable = False)
 class Device_details(db.Model):
-    __tablename = "Device_Detail"
+    __tablename = "Device_detail"
     id = db.Column(db.Integer, primary_key = True, nullable = False)
+    device_id = db.Column(db.Integer, db.ForeignKey('Device.id'), nullable = False)
+    device = db.relationship('Device', backref='Device_details', lazy=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable = False)
+    user = db.relationship('User', backref='Device_details', lazy=True)
+    create_timestamp = db.Column(db.DateTime, nullable = False)
+    device_serial_number = db.Column(db.String(120), nullable = False)
+    device_description = db.Column(db.String(120), nullable = False)
 
+class RepairServiceOrder(db.Model):
+    __tablename__ = "RepairServiceOrder"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)
+    device_id = db.Column(db.Integer, db.ForeignKey('Device.id'), nullable = False)
+    device_detais = db.relationship('Device_details', backref='RepairServiceOrder', lazy=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('Client.id'), nullable = False)
+    client = db.relationship('Client', backref='RepairServiceOrder', lazy=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable = False)
+    user = db.relationship('User', backref='RepairServiceOrder', lazy=True)
+    RepairServiceOrderStatus = db.Column(db.Integer, nullable = False)
+    create_timestamp = db.Column(db.DateTime, nullable = False)  
+    start_timestamp = db.Column(db.DateTime, nullable = True)
+    end_timestamp = db.Column(db.DateTime, nullable = True)
+    total_cost = db.Column(db.Float, nullable = False)
+class RepairServiceOrderDetails(db.Model):
+    __tablename__ = "RepairServiceOrderDetails"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)
+    repair_service_order_id = db.Column(db.Integer, db.ForeignKey('RepairServiceOrder.id'), nullable = False)
+    repair_service_order = db.relationship('RepairServiceOrder', backref='RepairServiceOrderDetails', lazy=True)
+    DevicePart_id = db.Column(db.Integer, db.ForeignKey('DevicePart.id'), nullable = False)
+    cost = db.Column(db.Float, nullable = False)
+    time_stamp = db.Column(db.DateTime, nullable = False)
+class Category(db.Model):
+    __tablename__ = "category"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)
+    name = db.Column(db.String(120), nullable = False)
+
+class DevicePart(db.Model):
+    __tablename__ = "DevicePart"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)   
+    name = db.Column(db.String(120), nullable = False)
+    description = db.Column(db.String(120), nullable = False)
+    price = db.Column(db.Float, nullable = False)
+    quantity = db.Column(db.Integer, nullable = False)
+    create_timestamp = db.Column(db.DateTime, nullable = False)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable = False)
+    category = db.relationship('Category', backref='DevicePart', lazy=True)
+
+class Inventary(db.Model):
+    __tablename__ = "Inventory"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)   
+    name = db.Column(db.String(120), nullable = False)
+    description = db.Column(db.String(120), nullable = False)
+    price = db.Column(db.Float, nullable = False)
+    cost = db.Column(db.Float, nullable = False)
+    quantity = db.Column(db.Integer, nullable = False)
+    create_timestamp = db.Column(db.DateTime, nullable = False)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable = False)
+    category = db.relationship('Category', backref='Inventory', lazy=True)
+
+class Sale(db.Model):
+    __tablename__ = "Sale"    
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)   
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable = False)
+    user = db.relationship('User', backref='Sale', lazy=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('Client.id'), nullable = False)
+    client = db.relationship('Client', backref='Sale', lazy=True)
+    total = db.Column(db.Float, nullable = False)
+    create_timestamp = db.Column(db.DateTime, nullable = False)
+
+class SaleDetails(db.Model):
+    __tablename__ = "SaleDetails"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)   
+    sale_id = db.Column(db.Integer, db.ForeignKey('Sale.id'), nullable = False)
+    sale = db.relationship('Sale', backref='SaleDetails', lazy=True)
+    device_part_id = db.Column(db.Integer, db.ForeignKey('DevicePart.id'), nullable = False)
+    quantity = db.Column(db.Integer, nullable = False)
+    price = db.Column(db.Float, nullable = False)
+    subtotal = db.Column(db.Float, nullable = False)
+
+db.create_all()
