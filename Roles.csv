@@ -1,0 +1,5 @@
+Descripcion,Compras,Reparacion,Ventas,Reportes,Usuarios,Clientes,Productos
+Gerente,True,True,True,True,True,True,True
+Admisnistrador,True,True,True,True,True,True,True
+Recepcionista,False,False,True,False,True,True,False
+Tecnico,False,True,True,False,False,False,False

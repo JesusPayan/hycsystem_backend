@@ -153,21 +153,47 @@
 # Inventario gestiona insumos y accesorios.
 # Notificaciones WhatsApp informan a los clientes sobre el estado de su reparación.
 from flask import Flask, jsonify
-from bd_config import db
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Date, create_engine
-from sqlalchemy.orm import relationship
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boolean, Date, create_engine
+from sqlalchemy.orm import relationship, backref
 from flask_sqlalchemy import SQLAlchemy
 from flask import current_app
 from contextlib import contextmanager
-from sqlalchemy import engine, create_engine
+from sqlalchemy import engine, create_engine,text
 import mysql.connector
 import datetime
-
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from bd_config import db
+import logging
+logging.basicConfig(level=logging.DEBUG)
 class Role(db.Model):
     __tablename__ = 'role'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
-    users = db.relationship('User', backref='role', lazy=True)
+    #users = db.relationship('User', backref='role', lazy=True)
+    permissions = db.Column(db.String(255), nullable=False)
+    create_timestamp = db.Column(db.DateTime, nullable=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    @staticmethod
+    def get_roles():
+        sqlString = text("SELECT * FROM view_roles;")
+        result = db.session.execute(sqlString)
+        role_list = result.fetchall()  # Asignamos los resultados correctamente
+        logging.info(f"Role -> get_roles")
+        return role_list
+        
+                
+    @staticmethod
+    def save_role(Role):
+        db.session.add(Role)
+        db.session.flush()
+        db.session.commit()
+        return Role.id
+    def save_roles(roles):
+        db.session.add_all(roles)
+        db.session.flush()
+        db.session.commit()
+    
 class User(db.Model):
     __tablename__ = 'User'
     id = db.Column(db.Integer, primary_key=True)
@@ -175,8 +201,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
     uuid = db.Column(db.String(120),unique=True ,nullable=False)
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
-    role = db.relationship('Role', backref='users', lazy=True)
+    role_id = db.Column(db.Integer, db.ForeignKey('Role.id'), nullable=False)
+    # role = db.relationship('Role', backref='users', lazy=True)
     create_timestamp = db.Column(db.DateTime, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     delete_timestamp = db.Column(db.DateTime, nullable=True)
@@ -204,9 +230,9 @@ class Device_details(db.Model):
     __tablename = "Device_detail"
     id = db.Column(db.Integer, primary_key = True, nullable = False)
     device_id = db.Column(db.Integer, db.ForeignKey('Device.id'), nullable = False)
-    device = db.relationship('Device', backref='Device_details', lazy=True)
+    # device = db.relationship('Device', backref='Device_details', lazy=True)
     user_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable = False)
-    user = db.relationship('User', backref='Device_details', lazy=True)
+   # user = db.relationship('User', backref='Device_details', lazy=True)
     create_timestamp = db.Column(db.DateTime, nullable = False)
     device_serial_number = db.Column(db.String(120), nullable = False)
     device_description = db.Column(db.String(120), nullable = False)
@@ -215,11 +241,11 @@ class RepairServiceOrder(db.Model):
     __tablename__ = "RepairServiceOrder"
     id = db.Column(db.Integer, primary_key = True, nullable =  False)
     device_id = db.Column(db.Integer, db.ForeignKey('Device.id'), nullable = False)
-    device_detais = db.relationship('Device_details', backref='RepairServiceOrder', lazy=True)
+    #device_detais = db.relationship('Device_details', backref='RepairServiceOrder', lazy=True)
     client_id = db.Column(db.Integer, db.ForeignKey('Client.id'), nullable = False)
-    client = db.relationship('Client', backref='RepairServiceOrder', lazy=True)
+    #client = db.relationship('Client', backref='RepairServiceOrder', lazy=True)
     user_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable = False)
-    user = db.relationship('User', backref='RepairServiceOrder', lazy=True)
+    #user = db.relationship('User', backref='RepairServiceOrder', lazy=True)
     RepairServiceOrderStatus = db.Column(db.Integer, nullable = False)
     create_timestamp = db.Column(db.DateTime, nullable = False)  
     start_timestamp = db.Column(db.DateTime, nullable = True)
@@ -229,7 +255,7 @@ class RepairServiceOrderDetails(db.Model):
     __tablename__ = "RepairServiceOrderDetails"
     id = db.Column(db.Integer, primary_key = True, nullable =  False)
     repair_service_order_id = db.Column(db.Integer, db.ForeignKey('RepairServiceOrder.id'), nullable = False)
-    repair_service_order = db.relationship('RepairServiceOrder', backref='RepairServiceOrderDetails', lazy=True)
+    #repair_service_order = db.relationship('RepairServiceOrder', backref='RepairServiceOrderDetails', lazy=True)
     DevicePart_id = db.Column(db.Integer, db.ForeignKey('DevicePart.id'), nullable = False)
     cost = db.Column(db.Float, nullable = False)
     time_stamp = db.Column(db.DateTime, nullable = False)
@@ -247,7 +273,7 @@ class DevicePart(db.Model):
     quantity = db.Column(db.Integer, nullable = False)
     create_timestamp = db.Column(db.DateTime, nullable = False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable = False)
-    category = db.relationship('Category', backref='DevicePart', lazy=True)
+    ##category = db.relationship('Category', backref='DevicePart', lazy=True)
 
 class Inventary(db.Model):
     __tablename__ = "Inventory"
@@ -259,15 +285,15 @@ class Inventary(db.Model):
     quantity = db.Column(db.Integer, nullable = False)
     create_timestamp = db.Column(db.DateTime, nullable = False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable = False)
-    category = db.relationship('Category', backref='Inventory', lazy=True)
+    #category = db.relationship('Category', backref='Inventory', lazy=True)
 
 class Sale(db.Model):
     __tablename__ = "Sale"    
     id = db.Column(db.Integer, primary_key = True, nullable =  False)   
     user_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable = False)
-    user = db.relationship('User', backref='Sale', lazy=True)
+    #user = db.relationship('User', backref='Sale', lazy=True)
     client_id = db.Column(db.Integer, db.ForeignKey('Client.id'), nullable = False)
-    client = db.relationship('Client', backref='Sale', lazy=True)
+    #client = db.relationship('Client', backref='Sale', lazy=True)
     total = db.Column(db.Float, nullable = False)
     create_timestamp = db.Column(db.DateTime, nullable = False)
 
@@ -275,10 +301,11 @@ class SaleDetails(db.Model):
     __tablename__ = "SaleDetails"
     id = db.Column(db.Integer, primary_key = True, nullable =  False)   
     sale_id = db.Column(db.Integer, db.ForeignKey('Sale.id'), nullable = False)
-    sale = db.relationship('Sale', backref='SaleDetails', lazy=True)
+    #sale = db.relationship('Sale', backref='SaleDetails', lazy=True)
     device_part_id = db.Column(db.Integer, db.ForeignKey('DevicePart.id'), nullable = False)
     quantity = db.Column(db.Integer, nullable = False)
     price = db.Column(db.Float, nullable = False)
     subtotal = db.Column(db.Float, nullable = False)
-
-db.create_all()
+# Base = declarative_base()
+# engine = create_engine('mysql+pymysql://root:root@localhost:3306/HYCSYSTEM_DB')
+# Base.metadata.create_all(engine)

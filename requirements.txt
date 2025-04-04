@@ -1,5 +1,4 @@
 certifi
-charset-normalizercls
 click
 colorama
 databases
@@ -16,7 +15,7 @@ SQLAlchemy
 typing_extensions
 urllib3
 Werkzeug
-flask.ext.mysq
 mysql-connector-python
 mysqlclient
-mysql
+mysql-connector-python
+pandas
