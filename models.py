@@ -207,6 +207,23 @@ class User(db.Model):
     active = db.Column(db.Boolean, default=True, nullable=False)
     delete_timestamp = db.Column(db.DateTime, nullable=True)
     last_login = db.Column(db.DateTime, nullable=True)
+    @staticmethod
+    def all_users():
+        sqlString = text("select * from users_vw;")
+        result = db.session.execute(sqlString)
+        user_list = result.fetchall()  # Asignamos los resultados correctamente
+        logging.info(f"User -> get_users")
+        return user_list
+    def save_user(User):
+        db.session.add(User)
+        db.session.flush()
+        db.session.commit()
+        return User.id
+    def save_users(users):
+        db.session.add_all(users)
+        db.session.flush()
+        db.session.commit()
+        
 class Client(db.Model):
     __tablename__ = "Client"
     id = db.Column(db.Integer, primary_key = True, nullable =  False)

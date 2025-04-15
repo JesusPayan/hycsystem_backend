@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 import json
-# from bd_config import db
 from services.Role import RoleService
 from utils import createFile
 import io,os,tempfile,base64, csv, json
