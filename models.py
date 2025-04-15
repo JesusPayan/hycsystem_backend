@@ -232,6 +232,31 @@ class Client(db.Model):
     email = db.Column(db.String(120), nullable = True)
     address = db.Column(db.String(120), nullable = True)
     create_timestamp = db.Column(db.DateTime, nullable = False)
+    @staticmethod
+    def get_clients():
+        sqlString = text("select * from clients_view;")
+        result = db.session.execute(sqlString)
+        client_list = result.fetchall()  # Asignamos los resultados correctamente
+        logging.info(f"Client -> get_clients")
+        return 200,client_list
+    @staticmethod
+    def get_client_by_name(client_name):
+        sqlString = text("SELECT * FROM clients_view WHERE client_name = :client_name")
+        result = db.session.execute(sqlString, {'client_name': client_name})
+        client_list = result.fetchall()
+        logging.info(f"Client -> get_client_by_name")
+        return client_list
+    def save_client(Client):
+        db.session.add(Client)
+        db.session.flush()
+        db.session.commit()
+        return Client.id
+
+class Login(db.Model):
+    __tablename__ = "Login"
+    id = db.Column(db.Integer, primary_key = True, nullable =  False)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable = False)
+    time_stamp = db.Column(db.DateTime, nullable = False)
 
 class RepairTrackingStep(db.Model):
     __tablename = "DeviceTrackingStep"

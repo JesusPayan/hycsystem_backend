@@ -4,11 +4,11 @@ from bd_config import db,app
 from flask_cors import CORS
 import os
 import logging
-from routes import Role, User
+from routes import Role, User, Client
 
 app.register_blueprint(Role.role_bp, url_prefix='/api')
 app.register_blueprint(User.user_bp, url_prefix='/api')
-
+app.register_blueprint(Client.client_bp, url_prefix='/api')
 logging.basicConfig(level=logging.DEBUG)
 
 def home():
